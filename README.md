@@ -168,13 +168,11 @@ Ongwu笔记是一个基于GitHub + Vercel + PostgreSQL的Web笔记应用，旨�
       ONGWU_NOTE_DB_NAME=postgres
       ONGWU_NOTE_DB_USER=postgres.xxxxxxxxxxxxx
       ONGWU_NOTE_DB_PASSWORD=xxxxxxxxxxxx
-
-      JWT 密钥 (用于用户登录令牌签名，必须保密)
-      生成方法：访问 https://generate-secret.vercel.app/32
       ONGWU_NOTE_JWT_SECRET=xxxxxxxxxxxxxxxxxxxxxx
-
-      应用环境 (production=生产环境, development=开发环境)
       NODE_ENV=production
+
+      JWT 密钥 (用于用户登录令牌签名，必须保密)，生成方法：访问 https://generate-secret.vercel.app/32
+      应用环境 (production=生产环境, development=开发环境)
    ```
 3. 配置构建设置默认即可
  
