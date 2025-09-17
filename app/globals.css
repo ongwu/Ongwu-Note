@@ -1,0 +1,132 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 自定义颜色变量 */
+@layer base {
+  :root {
+    --color-primary: #3b82f6;
+    --color-primary-dark: #2563eb;
+    --color-primary-light: #93c5fd;
+    --color-success: #10b981;
+    --color-danger: #ef4444;
+    --color-warning: #f59e0b;
+    --color-info: #3b82f6;
+    --color-text-primary: #1f2937;
+    --color-text-secondary: #6b7280;
+    --color-text-muted: #9ca3af;
+    --color-background: #ffffff;
+    --color-background-alt: #f9fafb;
+    --color-border: #e5e7eb;
+  }
+}
+
+/* 基础样式 */
+@layer base {
+  html {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+  }
+  
+  body {
+    background-color: var(--color-background-alt);
+    color: var(--color-text-primary);
+  }
+}
+
+/* 自定义动画 */
+@layer utilities {
+  .animate-fadeIn {
+    animation: fadeIn 0.2s ease-in-out;
+  }
+  
+  .animate-scaleHover {
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  .animate-scaleHover:hover {
+    transform: scale(1.02);
+  }
+}
+
+/* 组件类 - 简化样式 */
+@layer components {
+  /* 按钮样式 */
+  .ongwu-btn {
+    @apply px-3 py-1.5 rounded-lg font-medium transition-all duration-150 ease-in-out;
+  }
+  
+  .ongwu-btn-primary {
+    @apply bg-ongwu-primary text-white hover:bg-ongwu-primary/90 focus-visible:ring-ongwu-primary;
+  }
+  
+  .ongwu-btn-secondary {
+    @apply bg-gray-100 text-gray-700 hover:bg-gray-200 focus-visible:ring-gray-300;
+  }
+  
+  /* 输入框样式 */
+  .ongwu-input {
+    @apply w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-ongwu-primary/20 focus:border-ongwu-primary transition-all;
+  }
+  
+  /* 卡片样式 */
+  .ongwu-card {
+    @apply bg-white rounded-lg border border-gray-100 shadow-sm transition-all hover:shadow-md;
+  }
+  
+  /* 编辑器样式 */
+  .ongwu-editor {
+    @apply w-full resize-none bg-transparent font-mono focus:outline-none focus:ring-0;
+    line-height: 1.7;
+  }
+  
+  /* 预览区域样式 */
+  .ongwu-preview {
+    @apply p-6 prose max-w-none;
+  }
+  
+  /* 滚动条样式优化 */
+  .ongwu-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+  
+  .ongwu-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .ongwu-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .ongwu-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--color-border);
+    border-radius: 3px;
+  }
+  
+  .ongwu-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-text-muted);
+  }
+  
+  /* 侧边栏元素样式 */
+  .sidebar-item {
+    @apply flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-200;
+  }
+  
+  .sidebar-item-active {
+    @apply bg-ongwu-primary/10 text-ongwu-primary font-medium;
+  }
+  
+  .sidebar-item:hover:not(.sidebar-item-active) {
+    @apply bg-gray-100;
+  }
+  
+  /* 下拉菜单样式 */
+  .dropdown-menu {
+    @apply absolute z-10 w-48 mt-1 overflow-hidden bg-white rounded-lg shadow-sm border border-gray-200 animate-fadeIn;
+  }
+  
+  .dropdown-item {
+    @apply flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors;
+  }
+}
