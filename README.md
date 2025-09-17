@@ -1,3 +1,7 @@
+[![Hexo](https://img.shields.io/badge/Hexo-5.0+-blue.svg)](https://hexo.io/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/Version-1.0.0-orange.svg)](https://github.com/ongwu/ongwu-simple)
+
 ## 1. 项目构想
 
 Ongwu笔记是一个基于GitHub + Vercel + PostgreSQL的Web笔记应用，旨在提供一个简洁、高效、安全的在线笔记管理平台。
