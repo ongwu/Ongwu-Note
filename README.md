@@ -203,5 +203,5 @@ Ongwu笔记是一个基于GitHub + Vercel + PostgreSQL的Web笔记应用，旨�
 
 ---
 
-Ongwu笔记团队
-https://ongwu.cn
+Ongwu
+https://www.ongwu.cn
