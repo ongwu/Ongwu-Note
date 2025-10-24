@@ -7,6 +7,8 @@
 Ongwu笔记是一个基于GitHub + Vercel + PostgreSQL的Web笔记应用，旨在提供一个简洁、高效、安全的在线笔记管理平台。
 
 ### demo：https://note.ongwu.cn
+<img width="1920" height="645" alt="note ongwu cn_" src="https://github.com/user-attachments/assets/f1136286-4ab2-4752-bb19-ae91d4f9374b" />
+
 
 ### 核心需求
 - 提供用户注册与登录功能
