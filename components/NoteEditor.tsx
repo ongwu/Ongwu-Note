@@ -249,16 +249,20 @@ export default function NoteEditor({ note, onNoteUpdate, onNoteDelete, categorie
       body: formData,
     });
 
-    const data = await response.json();
-    if (!response.ok || !data.success) {
-      throw new Error(data.message || '图片上传失败');
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data?.success) {
+      throw new Error(data?.message || `图片上传失败（${response.status}）`);
     }
 
     const altText = file.name && file.name !== 'image.png' ? file.name.replace(/[\[\]]/g, '') : '粘贴图片';
     insertTextAtCursor(`\n![${altText}](${data.url})\n`);
   };
 
-  const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+  const handlePaste = async (e: React.ClipboardEvent<HTMLElement>) => {
+    if (e.defaultPrevented) {
+      return;
+    }
+
     const imageFiles = Array.from(e.clipboardData.items)
       .filter(item => item.kind === 'file' && item.type.startsWith('image/'))
       .map(item => item.getAsFile())
@@ -340,7 +344,7 @@ export default function NoteEditor({ note, onNoteUpdate, onNoteDelete, categorie
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col" onPaste={handlePaste}>
       {/* 顶部工具栏 - 简化样式 */}
       <div className="bg-white border-b border-gray-100 px-6 py-3">
         <div className="flex items-center justify-between">

@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PostgresOngwuDatabase } from '@/lib/postgres-db';
 import { authenticateRequest } from '@/lib/auth-middleware';
 
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+export const runtime = 'nodejs';
+
+const MAX_IMAGE_SIZE = 4 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set([
   'image/jpeg',
   'image/png',
@@ -10,6 +12,13 @@ const ALLOWED_IMAGE_TYPES = new Set([
   'image/webp'
 ]);
 
+function isUploadedFile(file: FormDataEntryValue | null): file is File {
+  return typeof file === 'object'
+    && file !== null
+    && typeof (file as File).arrayBuffer === 'function'
+    && typeof (file as File).type === 'string'
+    && typeof (file as File).size === 'number';
+}
 
 function sanitizeFileName(fileName: string, mimeType: string) {
   const defaultExt = mimeType.split('/')[1]?.replace('jpeg', 'jpg') || 'png';
@@ -31,7 +40,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file');
     const noteIdValue = formData.get('noteId');
 
-    if (!(file instanceof File)) {
+    if (!isUploadedFile(file)) {
       return NextResponse.json(
         { success: false, message: '未找到上传图片' },
         { status: 400 }
@@ -41,14 +50,13 @@ export async function POST(request: NextRequest) {
     if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
       return NextResponse.json(
         { success: false, message: '仅支持 JPG、PNG、GIF、WebP 图片' },
-
         { status: 400 }
       );
     }
 
     if (file.size > MAX_IMAGE_SIZE) {
       return NextResponse.json(
-        { success: false, message: '图片不能超过 5MB' },
+        { success: false, message: '图片不能超过 4MB' },
         { status: 400 }
       );
     }
