@@ -6,12 +6,26 @@ const fs = require('fs');
 const path = require('path');
 
 // 数据库连接配置
+const requiredEnv = [
+  'ONGWU_NOTE_DB_HOST',
+  'ONGWU_NOTE_DB_PORT',
+  'ONGWU_NOTE_DB_NAME',
+  'ONGWU_NOTE_DB_USER',
+  'ONGWU_NOTE_DB_PASSWORD'
+];
+
+const missingEnv = requiredEnv.filter(key => !process.env[key]);
+if (missingEnv.length > 0) {
+  console.error(`缺少数据库环境变量: ${missingEnv.join(', ')}`);
+  process.exit(1);
+}
+
 const pool = new Pool({
-  host: process.env.ONGWU_NOTE_DB_HOST || 'aws-1-us-east-1.pooler.supabase.com',
+  host: process.env.ONGWU_NOTE_DB_HOST,
   port: parseInt(process.env.ONGWU_NOTE_DB_PORT || '5432'),
-  database: process.env.ONGWU_NOTE_DB_NAME || 'postgres',
-  user: process.env.ONGWU_NOTE_DB_USER || 'postgres.radviydaixphjzbdmnhc',
-  password: process.env.ONGWU_NOTE_DB_PASSWORD || 'Xiaozhuang006..',
+  database: process.env.ONGWU_NOTE_DB_NAME,
+  user: process.env.ONGWU_NOTE_DB_USER,
+  password: process.env.ONGWU_NOTE_DB_PASSWORD,
   ssl: {
     rejectUnauthorized: false
   }

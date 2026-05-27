@@ -1,6 +1,6 @@
 // Ongwu笔记PostgreSQL数据库操作
 import { Pool, PoolClient } from 'pg';
-import { OngwuUser, OngwuCategory, OngwuNote, OngwuSystemStatus, IOngwuDatabase } from './db';
+import { OngwuUser, OngwuCategory, OngwuNote, OngwuSystemStatus, OngwuNoteAsset, IOngwuDatabase } from './db';
 
 export class PostgresOngwuDatabase implements IOngwuDatabase {
   private pool: Pool;
@@ -86,12 +86,13 @@ export class PostgresOngwuDatabase implements IOngwuDatabase {
   async updateUser(id: number, updateData: Partial<OngwuUser>): Promise<boolean> {
     const client = await this.pool.connect();
     try {
-      const fields = [];
+      const allowedFields = new Set(['username', 'password_hash']);
+      const fields: string[] = [];
       const values = [];
       let paramCount = 1;
 
       for (const [key, value] of Object.entries(updateData)) {
-        if (key !== 'id' && value !== undefined) {
+        if (allowedFields.has(key) && value !== undefined) {
           fields.push(`${key} = $${paramCount}`);
           values.push(value);
           paramCount++;
@@ -343,6 +344,33 @@ export class PostgresOngwuDatabase implements IOngwuDatabase {
     }
   }
 
+  async createNoteAsset(userId: number, noteId: number | null, fileName: string, mimeType: string, fileSize: number, fileData: Buffer): Promise<OngwuNoteAsset> {
+    const client = await this.pool.connect();
+    try {
+      const result = await client.query(`
+        INSERT INTO ongwu_note_assets (user_id, note_id, file_name, mime_type, file_size, file_data)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id, user_id, note_id, file_name, mime_type, file_size, created_at
+      `, [userId, noteId, fileName, mimeType, fileSize, fileData]);
+      return result.rows[0];
+    } finally {
+      client.release();
+    }
+  }
+
+  async getNoteAssetById(id: string, userId: number): Promise<OngwuNoteAsset | null> {
+    const client = await this.pool.connect();
+    try {
+      const result = await client.query(
+        'SELECT * FROM ongwu_note_assets WHERE id = $1 AND user_id = $2',
+        [id, userId]
+      );
+      return result.rows[0] || null;
+    } finally {
+      client.release();
+    }
+  }
+
   // 搜索笔记
   async searchNotes(query: string, userId: number): Promise<OngwuNote[]> {
     const client = await this.pool.connect();
@@ -418,12 +446,12 @@ export class PostgresOngwuDatabase implements IOngwuDatabase {
     try {
       // 删除指定天数前的软删除记录
       const categoriesResult = await client.query(
-        'DELETE FROM ongwu_categories WHERE deleted_at IS NOT NULL AND deleted_at < NOW() - INTERVAL \'$1 days\'',
+        "DELETE FROM ongwu_categories WHERE deleted_at IS NOT NULL AND deleted_at < NOW() - ($1::int * INTERVAL '1 day')",
         [daysOld]
       );
       
       const notesResult = await client.query(
-        'DELETE FROM ongwu_notes WHERE deleted_at IS NOT NULL AND deleted_at < NOW() - INTERVAL \'$1 days\'',
+        "DELETE FROM ongwu_notes WHERE deleted_at IS NOT NULL AND deleted_at < NOW() - ($1::int * INTERVAL '1 day')",
         [daysOld]
       );
 

@@ -126,6 +126,25 @@ export async function POST(request: NextRequest) {
       )
     `);
 
+    // 创建笔记图片资源表
+    await client.query(`
+      CREATE EXTENSION IF NOT EXISTS pgcrypto
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ongwu_note_assets (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id INTEGER NOT NULL,
+        note_id INTEGER NULL,
+        file_name TEXT NOT NULL,
+        mime_type TEXT NOT NULL,
+        file_size INTEGER NOT NULL,
+        file_data BYTEA NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES ongwu_users(id) ON DELETE CASCADE,
+        FOREIGN KEY (note_id) REFERENCES ongwu_notes(id) ON DELETE SET NULL
+      )
+    `);
+
     // 创建索引
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_ongwu_notes_user_id ON ongwu_notes(user_id)
@@ -174,6 +193,13 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       // 软删除索引可能已存在
     }
+
+    // 启用 RLS，服务端使用数据库连接访问，前端匿名访问默认无权限
+    await client.query('ALTER TABLE ongwu_system_status ENABLE ROW LEVEL SECURITY');
+    await client.query('ALTER TABLE ongwu_users ENABLE ROW LEVEL SECURITY');
+    await client.query('ALTER TABLE ongwu_categories ENABLE ROW LEVEL SECURITY');
+    await client.query('ALTER TABLE ongwu_notes ENABLE ROW LEVEL SECURITY');
+    await client.query('ALTER TABLE ongwu_note_assets ENABLE ROW LEVEL SECURITY');
 
     // 生成随机密码
     const randomPassword = Math.random().toString(36).slice(-8); // 生成8位随机密码

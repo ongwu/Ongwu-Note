@@ -39,6 +39,17 @@ export interface OngwuSystemStatus {
   updated_at: string;
 }
 
+export interface OngwuNoteAsset {
+  id: string;
+  user_id: number;
+  note_id?: number | null;
+  file_name: string;
+  mime_type: string;
+  file_size: number;
+  file_data?: Buffer;
+  created_at: string;
+}
+
 // 通用数据库接口
 export interface IOngwuDatabase {
   getUserByUsername(username: string): Promise<OngwuUser | null>;
@@ -60,6 +71,8 @@ export interface IOngwuDatabase {
   deleteNote(id: number, userId: number): Promise<boolean>;
   softDeleteNote(id: number, userId: number): Promise<boolean>;
   restoreNote(id: number, userId: number): Promise<boolean>;
+  createNoteAsset(userId: number, noteId: number | null, fileName: string, mimeType: string, fileSize: number, fileData: Buffer): Promise<OngwuNoteAsset>;
+  getNoteAssetById(id: string, userId: number): Promise<OngwuNoteAsset | null>;
   // 数据清理方法
   permanentlyDeleteOldRecords(daysOld: number): Promise<{ categories: number; notes: number }>;
   resetSequences(): Promise<void>;
@@ -102,11 +115,12 @@ export class OngwuDatabase implements IOngwuDatabase {
   }
 
   async updateUser(id: number, updateData: Partial<OngwuUser>): Promise<boolean> {
+    const allowedFields = new Set(['username', 'password_hash']);
     const fields = [];
     const values = [];
     
     for (const [key, value] of Object.entries(updateData)) {
-      if (key !== 'id' && value !== undefined) {
+      if (allowedFields.has(key) && value !== undefined) {
         fields.push(`${key} = ?`);
         values.push(value);
       }
@@ -257,6 +271,14 @@ export class OngwuDatabase implements IOngwuDatabase {
     const stmt = this.db.prepare('UPDATE ongwu_notes SET deleted_at = NULL WHERE id = ? AND user_id = ? AND deleted_at IS NOT NULL');
     const result = await stmt.bind(id, userId).run();
     return result.changes > 0;
+  }
+
+  async createNoteAsset(userId: number, noteId: number | null, fileName: string, mimeType: string, fileSize: number, fileData: Buffer): Promise<OngwuNoteAsset> {
+    throw new Error('当前数据库驱动不支持图片资源存储');
+  }
+
+  async getNoteAssetById(id: string, userId: number): Promise<OngwuNoteAsset | null> {
+    throw new Error('当前数据库驱动不支持图片资源存储');
   }
 
   // 搜索笔记

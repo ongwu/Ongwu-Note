@@ -36,6 +36,8 @@ export default function NoteEditor({ note, onNoteUpdate, onNoteDelete, categorie
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -214,6 +216,72 @@ export default function NoteEditor({ note, onNoteUpdate, onNoteDelete, categorie
 
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
+    setUploadError('');
+  };
+
+  const insertTextAtCursor = (text: string) => {
+    const textarea = textareaRef.current;
+    const start = textarea?.selectionStart ?? content.length;
+    const end = textarea?.selectionEnd ?? content.length;
+
+    setContent(prevContent => {
+      const safeStart = Math.min(start, prevContent.length);
+      const safeEnd = Math.min(end, prevContent.length);
+      return `${prevContent.slice(0, safeStart)}${text}${prevContent.slice(safeEnd)}`;
+    });
+
+    setTimeout(() => {
+      textareaRef.current?.focus();
+      const cursorPosition = start + text.length;
+      textareaRef.current?.setSelectionRange(cursorPosition, cursorPosition);
+    }, 0);
+  };
+
+  const uploadImageFile = async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (note?.id && note.id > 0) {
+      formData.append('noteId', String(note.id));
+    }
+
+    const response = await fetch('/api/uploads', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || '图片上传失败');
+    }
+
+    const altText = file.name && file.name !== 'image.png' ? file.name.replace(/[\[\]]/g, '') : '粘贴图片';
+    insertTextAtCursor(`\n![${altText}](${data.url})\n`);
+  };
+
+  const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const imageFiles = Array.from(e.clipboardData.items)
+      .filter(item => item.kind === 'file' && item.type.startsWith('image/'))
+      .map(item => item.getAsFile())
+      .filter((file): file is File => Boolean(file));
+
+    if (imageFiles.length === 0) {
+      return;
+    }
+
+    e.preventDefault();
+    setIsEditing(true);
+    setIsUploadingImage(true);
+    setUploadError('');
+
+    try {
+      for (const file of imageFiles) {
+        await uploadImageFile(file);
+      }
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : '图片上传失败');
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
   const handleEdit = () => {
@@ -337,7 +405,7 @@ export default function NoteEditor({ note, onNoteUpdate, onNoteDelete, categorie
             {/* 保存状态 */}
             <div className="flex items-center text-sm text-gray-500">
               {getSaveStatusIcon()}
-              <span className="ml-2">{getSaveStatusText()}</span>
+              <span className="ml-2">{isUploadingImage ? '图片上传中...' : getSaveStatusText()}</span>
             </div>
 
             {/* 操作按钮 - 简化布局 */}
@@ -392,6 +460,12 @@ export default function NoteEditor({ note, onNoteUpdate, onNoteDelete, categorie
         </div>
       </div>
 
+      {uploadError && (
+        <div className="px-6 py-2 text-sm text-red-600 bg-red-50 border-b border-red-100">
+          {uploadError}
+        </div>
+      )}
+
       {/* 编辑器区域 - 优化样式 */}
       <div className="flex-1 flex overflow-hidden">
         {/* 编辑区域 */}
@@ -400,7 +474,8 @@ export default function NoteEditor({ note, onNoteUpdate, onNoteDelete, categorie
             ref={textareaRef}
             value={content}
             onChange={handleContentChange}
-            placeholder="开始编写您的笔记..."
+            onPaste={handlePaste}
+            placeholder="开始编写您的笔记... 支持 Ctrl+V 直接粘贴图片"
             className="ongwu-editor p-6 text-gray-800 leading-relaxed font-sans text-base"
             style={{ minHeight: '100%' }}
           />

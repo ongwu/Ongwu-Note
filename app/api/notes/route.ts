@@ -74,7 +74,26 @@ export async function POST(request: NextRequest) {
     const noteContent = content || '';
 
     const db = PostgresOngwuDatabase.getInstance();
-    const note = await db.createNote(title, noteContent, category_id, authResult.userId!);
+    const categoryId = category_id === null || category_id === undefined ? null : Number(category_id);
+
+    if (categoryId !== null) {
+      if (!Number.isInteger(categoryId)) {
+        return NextResponse.json(
+          { success: false, message: '分类ID无效' },
+          { status: 400 }
+        );
+      }
+
+      const categories = await db.getCategoriesByUserId(authResult.userId!);
+      if (!categories.some(category => category.id === categoryId)) {
+        return NextResponse.json(
+          { success: false, message: '分类不存在' },
+          { status: 400 }
+        );
+      }
+    }
+
+    const note = await db.createNote(title, noteContent, categoryId, authResult.userId!);
     
     // 清除笔记缓存
     apiCache.clearPattern(`notes_${authResult.userId!}`);
